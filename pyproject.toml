@@ -1,0 +1,25 @@
+[project]
+name = "vacancies-hh-ru"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Mariya",email = "mawa-melnikova@ya.ru"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+]
+
+[tool.poetry]
+packages = [{include = "vacancies_hh"}]
+
+
+[tool.poetry.group.lint.dependencies]
+flake8 = "^7.3.0"
+mypy = "^1.17.1"
+black = "^25.1.0"
+isort = "^6.0.1"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
