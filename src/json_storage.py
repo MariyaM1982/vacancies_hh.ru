@@ -1,59 +1,70 @@
 import json
+import os
 from typing import Dict, List, Optional
 
-from src.base_storage import BaseStorage
 
-
-class JSONStorage(BaseStorage):
+class JSONStorage:
     def __init__(self, filename: str = "vacancies.json"):
         self._filename = filename
+        # Проверяем существование файла при инициализации
+        if not os.path.exists(self._filename):
+            with open(self._filename, "w", encoding="utf-8") as f:
+                json.dump([], f)
 
     def add_vacancy(self, vacancy: Dict) -> None:
-        """
-        Добавляет вакансию в файл
-        :param vacancy: словарь с данными вакансии
-        """
+        try:
+            # Читаем существующие данные
+            with open(self._filename, "r+", encoding="utf-8") as file:
+                try:
+                    data = json.load(file)
+                except json.JSONDecodeError:
+                    data = []
+
+                # Проверяем дубликаты по URL
+                if not any(v["url"] == vacancy["url"] for v in data):
+                    data.append(vacancy)
+
+                # Перезаписываем файл
+                file.seek(0)
+                json.dump(data, file, ensure_ascii=False, indent=4)
+                file.truncate()
+        except Exception as e:
+            print(f"Ошибка при сохранении: {e}")
+
+    def get_vacancies(self) -> List[Dict]:
         try:
             with open(self._filename, "r", encoding="utf-8") as file:
                 data = json.load(file)
+                if isinstance(data, list):
+                    return data
+                return []
         except FileNotFoundError:
-            data = []
-
-        # Проверяем уникальность вакансии по URL
-        if not any(v["url"] == vacancy["url"] for v in data):
-            data.append(vacancy)
-            with open(self._filename, "w", encoding="utf-8") as file:
-                json.dump(data, file, ensure_ascii=False, indent=4)
-
-    def get_vacancies(self) -> List[Dict]:
-        """
-        Получает все вакансии из файла
-        :return: список словарей с вакансиями
-        """
-        try:
-            with open(self._filename, "r", encoding="utf-8") as file:
-                return json.load(file)
-        except FileNotFoundError:
+            return []
+        except json.JSONDecodeError:
+            return []
+        except Exception as e:
+            print(f"Ошибка при чтении данных: {e}")
             return []
 
     def delete_vacancy(self, url: str) -> bool:
-        """
-        Удаляет вакансию по URL
-        :param url: URL вакансии для удаления
-        :return: True если вакансия была удалена, False если не найдена
-        """
         try:
-            with open(self._filename, "r", encoding="utf-8") as file:
+            with open(self._filename, "r+", encoding="utf-8") as file:
                 data = json.load(file)
-        except FileNotFoundError:
-            return False
+                original_length = len(data)
 
-        updated_data = [v for v in data if v["url"] != url]
-        if len(updated_data) < len(data):
-            with open(self._filename, "w", encoding="utf-8") as file:
-                json.dump(updated_data, file, ensure_ascii=False, indent=4)
-            return True
-        return False
+                # Фильтруем вакансии
+                data = [v for v in data if v["url"] != url]
+
+                # Сохраняем изменения только если что-то изменилось
+                if len(data) < original_length:
+                    file.seek(0)
+                    json.dump(data, file, ensure_ascii=False, indent=4)
+                    file.truncate()
+                    return True
+                return False
+        except Exception as e:
+            print(f"Ошибка при удалении: {e}")
+            return False
 
     def filter_vacancies(
         self,
