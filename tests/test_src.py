@@ -259,8 +259,63 @@ class TestVacancy(unittest.TestCase):
         self.assertEqual(vacancy.salary, "Зарплата не указана")
 
     def test_format_salary_with_string(self):
-        vacancy = Vacancy("Test", "url", "200000 RUB", "desc")
-        self.assertEqual(vacancy.salary, "200000 RUB")
+        # Тест с простой строкой зарплаты (целое число)
+        vacancy1 = Vacancy("Test", "url", "200000 RUB", "desc")
+        self.assertEqual(vacancy1.salary, "200000 RUB")
+
+        # Тест с дробным числом
+        vacancy2 = Vacancy("Test", "url", "200000.50 RUB", "desc")
+        self.assertEqual(vacancy2.salary, "200000.5 RUB")
+
+        # Тест с некорректной строкой
+        vacancy3 = Vacancy("Test", "url", "некорректная строка", "desc")
+        self.assertEqual(vacancy3.salary, "Зарплата не указана")
+
+        # Тест с числом без валюты
+        vacancy4 = Vacancy("Test", "url", "200000", "desc")
+        self.assertEqual(vacancy4.salary, "200000 RUB")
+
+        # Тест с пробелами
+        vacancy5 = Vacancy("Test", "url", " 200 000 RUB ", "desc")
+        self.assertEqual(vacancy5.salary, "200000 RUB")
+
+        # Тест с диапазоном зарплат (целые числа)
+        vacancy6 = Vacancy("Test", "url", {"from": 150000, "to": 250000, "currency": "RUB"}, "desc")
+        self.assertEqual(vacancy6.salary, "150000 - 250000 RUB")
+
+        # Тест с диапазоном зарплат (дробные числа)
+        vacancy7 = Vacancy("Test", "url", {"from": 150000.5, "to": 250000.75, "currency": "RUB"}, "desc")
+        self.assertEqual(vacancy7.salary, "150000.5 - 250000.75 RUB")
+
+        # Тест с только верхней границей
+        vacancy8 = Vacancy("Test", "url", {"to": 250000, "currency": "RUB"}, "desc")
+        self.assertEqual(vacancy8.salary, "до 250000 RUB")
+
+        # Тест с только нижней границей
+        vacancy9 = Vacancy("Test", "url", {"from": 150000, "currency": "RUB"}, "desc")
+        self.assertEqual(vacancy9.salary, "150000 RUB")
+
+        # Тест с пустой строкой
+        vacancy10 = Vacancy("Test", "url", "", "desc")
+        self.assertEqual(vacancy10.salary, "Зарплата не указана")
+
+        # Тест с нулем
+        vacancy11 = Vacancy("Test", "url", "0 RUB", "desc")
+        self.assertEqual(vacancy11.salary, "0 RUB")
+
+        # Тест с отрицательным числом
+        vacancy12 = Vacancy("Test", "url", "-200000 RUB", "desc")
+        self.assertEqual(vacancy12.salary, "-200000 RUB")
+
+        # Тест с разными пробелами и форматами
+        vacancy13 = Vacancy("Test", "url", " 200 000 RUB ", "desc")
+        self.assertEqual(vacancy13.salary, "200000 RUB")
+
+        # Тест с другой валютой
+        vacancy15 = Vacancy("Test", "url", {"from": 1500, "to": 2500, "currency": "USD"}, "desc")
+        self.assertEqual(vacancy15.salary, "1500 - 2500 USD")
+
+
 
     def test_to_dict(self):
         expected_dict = {
