@@ -1,12 +1,10 @@
 import io
 import os
-import json
 import sys
 import unittest
 from io import StringIO
 from typing import Dict, List
-from unittest.mock import MagicMock
-from poetry.console.commands import self
+
 
 from src.helpers import (
     format_salary,
