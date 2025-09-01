@@ -25,10 +25,27 @@ def main():
             query = input("Введите поисковый запрос: ")
             try:
                 vacancies_data = api.get_vacancies(query)
-                vacancies = [Vacancy(**data) for data in vacancies_data]
+
+                # Проверяем, что получили список
+                if not isinstance(vacancies_data, list):
+                    print("Ошибка получения данных от API")
+                    continue
+
+                # Фильтруем только валидные вакансии
+                vacancies = [
+                    Vacancy(
+                        name=data.get('name', 'Не указано'),
+                        url=data.get('alternate_url', 'Не указано'),
+                        salary=data.get('salary', 'Зарплата не указана'),  # Передаем словарь зарплаты
+                        description=data.get('snippet', {}).get('responsibility', 'Описание отсутствует')
+                    )
+                    for data in vacancies_data if isinstance(data, dict)
+                ]
+
                 for vacancy in vacancies:
                     storage.add_vacancy(vacancy.to_dict())
                 print(f"Найдено и сохранено {len(vacancies)} вакансий")
+
             except Exception as e:
                 print(f"Ошибка при получении данных: {e}")
 
@@ -36,13 +53,28 @@ def main():
             try:
                 top_n = int(input("Введите количество вакансий для отображения в топе: "))
                 vacancies = storage.get_vacancies()
-                vacancies = [Vacancy(**v) for v in vacancies]
-                sorted_vacancies = sort_vacancies_by_salary(vacancies)
-                top_vacancies = sorted_vacancies[:top_n]
-                print(f"\nТоп-{top_n} вакансий по зарплате:")
-                print_vacancies(top_vacancies)
+
+                # Проверяем, что данные корректны
+                if not isinstance(vacancies, list):
+                    print("Ошибка: некорректные данные в хранилище")
+                    continue
+
+                # Преобразуем словари в объекты Vacancy
+                vacancies = [Vacancy(**v) for v in vacancies if isinstance(v, dict)]
+
+                # Сортируем только если есть вакансии
+                if vacancies:
+                    sorted_vacancies = sort_vacancies_by_salary(vacancies)
+                    top_vacancies = sorted_vacancies[:top_n]
+                    print(f"\nТоп-{top_n} вакансий по зарплате:")
+                    print_vacancies(top_vacancies)
+
+                else:
+                    print("Вакансии не найдены")
+
             except ValueError:
                 print("Ошибка: введите число")
+
             except Exception as e:
                 print(f"Произошла ошибка: {e}")
 
